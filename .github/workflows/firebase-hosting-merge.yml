@@ -18,4 +18,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BERINDOR_REACT_EXPERIMENTS }}'
           channelId: live
           projectId: berindor-react-experiments
-          target: berindor-bar-chart
+          target: berindor-d3-projects

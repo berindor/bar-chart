@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "berindor-bar-chart",
+    "site": "berindor-d3-projects",
     "public": "build",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [

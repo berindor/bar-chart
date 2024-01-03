@@ -15,4 +15,4 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BERINDOR_REACT_EXPERIMENTS }}'
           projectId: berindor-react-experiments
-          target: berindor-bar-chart
+          target: berindor-d3-projects
