@@ -3,10 +3,6 @@ import React from 'react';
 import * as d3 from 'd3';
 
 class BarChart extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
   async componentDidMount() {
     const dataset = await this.loadData();
     this.drawChart(dataset);
