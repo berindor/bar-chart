@@ -1,4 +1,4 @@
-import './App.css';
+import './BarChart.css';
 import React from 'react';
 import * as d3 from 'd3';
 
@@ -38,7 +38,22 @@ class BarChart extends React.Component {
       .range([h - padding, padding]);
     const yAxis = d3.axisLeft(yScale).ticks(15);
     d3.select('svg').remove();
+    d3.select('.tooltip').remove();
     const svg = d3.selectAll('.App').append('svg').attr('width', w).attr('height', h).style('background-color', 'green');
+    var tooltip = d3.selectAll('.App').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
+    var mouseover = function (event) {
+      const date = event.target.getAttribute('data-date');
+      const gdp = event.target.getAttribute('data-gdp');
+      console.log(event.target);
+      tooltip
+        .style('visibility', 'visible')
+        .html('date: ' + date + '<br> GDP: ' + gdp)
+        .style('left', xScale(new Date(date)) - (padding / 2) * 3 + 'px')
+        .style('top', yScale(gdp) + padding - 10 + 'px');
+    };
+    var mouseout = function () {
+      tooltip.style('visibility', 'hidden');
+    };
     svg
       .selectAll('rect')
       .data(dataset)
@@ -51,7 +66,9 @@ class BarChart extends React.Component {
       .attr('class', 'bar')
       .attr('data-date', d => d[0])
       .attr('data-gdp', d => d[1])
-      .attr('fill', 'orange');
+      .attr('fill', 'orange')
+      .on('mouseover', mouseover)
+      .on('mouseout', mouseout);
     svg
       .append('g')
       .attr('id', 'y-axis')
