@@ -47,12 +47,14 @@ class BarChart extends React.Component {
       console.log(event.target);
       tooltip
         .style('visibility', 'visible')
+        .attr('data-date', date)
+        .attr('data-gdp', gdp)
         .html('date: ' + date + '<br> GDP: ' + gdp)
-        .style('left', xScale(new Date(date)) - (padding / 2) * 3 + 'px')
-        .style('top', yScale(gdp) + padding - 10 + 'px');
+        .style('left', xScale(new Date(date)) - w / 2 + 'px')
+        .style('top', yScale(gdp) - padding - h + 'px');
     };
     var mouseout = function () {
-      tooltip.style('visibility', 'hidden');
+      tooltip.style('visibility', 'hidden').attr('data-date', undefined).attr('data-gdp', undefined);
     };
     svg
       .selectAll('rect')
@@ -82,7 +84,7 @@ class BarChart extends React.Component {
   }
 
   render() {
-    return <div></div>;
+    return <div id="bar-chart"></div>;
   }
 }
 
