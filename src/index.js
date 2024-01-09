@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import BarChartApp from './BarChart';
+import ScatterPlotApp from './ScatterPlot';
 import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
@@ -13,6 +14,10 @@ const router = createBrowserRouter([
   {
     path: '/bar-chart',
     element: <BarChartApp />
+  },
+  {
+    path: '/scatter-plot',
+    element: <ScatterPlotApp />
   }
 ]);
 
