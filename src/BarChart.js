@@ -1,4 +1,4 @@
-import './BarChart.css';
+import './BarChart.scss';
 import React from 'react';
 import * as d3 from 'd3';
 
@@ -85,7 +85,7 @@ class BarChart extends React.Component {
 
 function BarChartPage() {
   return (
-    <div className="Page">
+    <div className="ScatterPlotPage">
       <h1 id="title">United States GDP</h1>
       <BarChart />
     </div>

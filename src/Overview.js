@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import routes from './routes';
+import './Overview.scss';
 
 class Overview extends React.Component {
   createLinkList(list) {
@@ -26,7 +27,7 @@ class Overview extends React.Component {
 
 function OverviewPage() {
   return (
-    <div className="Page">
+    <div className="OverviewPage">
       <h1 id="title">freeCodeCamp D3 projects</h1>
       <h2>by berindor</h2>
       <Overview />

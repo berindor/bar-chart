@@ -1,4 +1,4 @@
-import './ScatterPlot.css';
+import './ScatterPlot.scss';
 import React from 'react';
 import * as d3 from 'd3';
 
@@ -31,7 +31,7 @@ class ScatterPlot extends React.Component {
     d3.selectAll('svg').remove();
     d3.select('.tooltip').remove();
     d3.selectAll('.wrapper-div').remove();
-    d3.selectAll('.Page').append('div').attr('class', 'wrapper-div');
+    d3.selectAll('.ScatterPlotPage').append('div').attr('class', 'wrapper-div');
     const xScale = d3
       .scaleLinear()
       .domain([minYear - 0.5, maxYear + 0.5])
@@ -149,7 +149,7 @@ class ScatterPlot extends React.Component {
 
 function ScatterPlotPage() {
   return (
-    <div className="Page">
+    <div className="ScatterPlotPage">
       <h1 id="title">Doping in Professional Bicycle Racing</h1>
       <ScatterPlot />
     </div>
