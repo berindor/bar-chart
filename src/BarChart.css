@@ -1,4 +1,4 @@
-.App {
+.Page {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,11 +9,12 @@ h1 {
 }
 
 #bar-chart {
+  position: relative;
   padding-top: 30px;
 }
 
 #tooltip {
-  position: relative;
+  position: absolute;
   background-color: orange;
   opacity: 0.8;
   padding: 3px 5px;

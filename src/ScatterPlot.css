@@ -1,4 +1,4 @@
-.App {
+.Page {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8,8 +8,11 @@ h1 {
   text-align: center;
 }
 
-#tooltip {
+.wrapper-div {
   position: relative;
+}
+#tooltip {
+  position: absolute;
   background-color: orange;
   opacity: 0.8;
   padding: 3px 5px;
@@ -26,9 +29,10 @@ h1 {
   display: grid;
   grid-auto-flow: column;
   grid-template: 1fr 1fr / 1fr 3fr;
-  position: relative;
-  left: 300px;
-  bottom: 700px;
+  position: absolute;
+  left: 650px;
+  top: 100px;
+  background-color: green;
 }
 
 .legend-text-div {

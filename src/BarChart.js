@@ -18,42 +18,37 @@ class BarChart extends React.Component {
   }
 
   drawChart(dataset) {
-    const n = dataset.length;
-    const minGDP = d3.min(dataset, d => d[1]);
+    const numberOfBars = dataset.length;
     const maxGDP = d3.max(dataset, d => d[1]);
-    console.log('number of data: ' + n + ', min: ' + minGDP + ', max: ' + maxGDP);
-    console.log('first two dates: ' + dataset[0][0] + ', ' + dataset[1][0]);
-    console.log('last date: ' + dataset[n - 1][0]);
-    const w = 900;
-    const h = 600;
+    const width = 900;
+    const height = 600;
     const padding = 50;
     const xScale = d3
       .scaleUtc()
-      .domain([new Date(dataset[0][0]), new Date(dataset[n - 1][0])])
-      .range([padding, w - padding]);
+      .domain([new Date(dataset[0][0]), new Date(dataset[numberOfBars - 1][0])])
+      .range([padding, width - padding]);
     const xAxis = d3.axisBottom(xScale).ticks(20);
     const yScale = d3
       .scaleLinear()
       .domain([0, maxGDP])
-      .range([h - padding, padding]);
+      .range([height - padding, padding]);
     const yAxis = d3.axisLeft(yScale).ticks(15);
     d3.select('svg').remove();
     d3.select('.tooltip').remove();
-    const svg = d3.selectAll('.App').append('svg').attr('width', w).attr('height', h).style('background-color', 'green');
-    var tooltip = d3.selectAll('.App').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
-    var mouseover = function (event) {
+    const svg = d3.selectAll('#bar-chart').append('svg').attr('width', width).attr('height', height).style('background-color', 'green');
+    var tooltip = d3.selectAll('#bar-chart').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
+    const handleMouseover = function (event) {
       const date = event.target.getAttribute('data-date');
       const gdp = event.target.getAttribute('data-gdp');
-      console.log(event.target);
       tooltip
         .style('visibility', 'visible')
         .attr('data-date', date)
         .attr('data-gdp', gdp)
         .html('date: ' + date + '<br> GDP: ' + gdp)
-        .style('left', xScale(new Date(date)) - w / 2 + 'px')
-        .style('top', yScale(gdp) - padding - h + 'px');
+        .style('left', xScale(new Date(date)) + -padding + 'px')
+        .style('top', yScale(gdp) - padding / 2 + 'px');
     };
-    var mouseout = function () {
+    const handleMouseout = function () {
       tooltip.style('visibility', 'hidden').attr('data-date', undefined).attr('data-gdp', undefined);
     };
     svg
@@ -63,14 +58,14 @@ class BarChart extends React.Component {
       .append('rect')
       .attr('x', (d, i) => xScale(new Date(d[0])))
       .attr('y', d => yScale(d[1]))
-      .attr('width', (w - 2 * padding) / n)
-      .attr('height', d => h - padding - yScale(d[1]))
+      .attr('width', (width - 2 * padding) / numberOfBars)
+      .attr('height', d => height - padding - yScale(d[1]))
       .attr('class', 'bar')
       .attr('data-date', d => d[0])
       .attr('data-gdp', d => d[1])
       .attr('fill', 'orange')
-      .on('mouseover', mouseover)
-      .on('mouseout', mouseout);
+      .on('mouseover', handleMouseover)
+      .on('mouseout', handleMouseout);
     svg
       .append('g')
       .attr('id', 'y-axis')
@@ -79,7 +74,7 @@ class BarChart extends React.Component {
     svg
       .append('g')
       .attr('id', 'x-axis')
-      .attr('transform', 'translate( 0, ' + (h - padding) + ')')
+      .attr('transform', 'translate( 0, ' + (height - padding) + ')')
       .call(xAxis);
   }
 
@@ -88,13 +83,13 @@ class BarChart extends React.Component {
   }
 }
 
-function BarChartApp() {
+function BarChartPage() {
   return (
-    <div className="App">
+    <div className="Page">
       <h1 id="title">United States GDP</h1>
       <BarChart />
     </div>
   );
 }
 
-export default BarChartApp;
+export default BarChartPage;

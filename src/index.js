@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import BarChartApp from './BarChart';
-import ScatterPlotApp from './ScatterPlot';
+import BarChartPage from './BarChart';
+import ScatterPlotPage from './ScatterPlot';
 import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
@@ -13,11 +13,11 @@ const router = createBrowserRouter([
   },
   {
     path: '/bar-chart',
-    element: <BarChartApp />
+    element: <BarChartPage />
   },
   {
     path: '/scatter-plot',
-    element: <ScatterPlotApp />
+    element: <ScatterPlotPage />
   }
 ]);
 
