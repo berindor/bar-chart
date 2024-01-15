@@ -1,25 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import BarChartPage from './BarChart';
-import ScatterPlotPage from './ScatterPlot';
+import routes from './routes';
 import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <div>Hello world!</div>
-  },
-  {
-    path: '/bar-chart',
-    element: <BarChartPage />
-  },
-  {
-    path: '/scatter-plot',
-    element: <ScatterPlotPage />
-  }
-]);
+const router = createBrowserRouter(routes);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
