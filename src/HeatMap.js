@@ -9,7 +9,8 @@ class HeatMap extends React.Component {
       baseTemperature: undefined,
       monthlyVariance: [],
       minVariance: undefined,
-      maxVariance: undefined
+      maxVariance: undefined,
+      numberOfColors: 6
     };
     this.drawPage = this.drawPage.bind(this);
     this.setColorBorders = this.setColorBorders.bind(this);
@@ -30,7 +31,6 @@ class HeatMap extends React.Component {
   }
 
   drawPage() {
-    console.log(this.state);
     this.createSubtitle();
     this.drawChart();
     this.drawLegend();
@@ -52,7 +52,13 @@ class HeatMap extends React.Component {
     return arr;
   }
 
-  setColor(temperature) {}
+  setColor(temperature, numberOfColors) {
+    const colorBorders = this.setColorBorders(numberOfColors);
+    const upperBorder = colorBorders.find(element => element > temperature);
+    const colorCode = 9 - colorBorders.indexOf(upperBorder);
+    const color = '#' + colorCode + colorCode + colorCode;
+    return color;
+  }
 
   createSubtitle() {
     const yearMin = this.state.monthlyVariance[0].year;
@@ -106,13 +112,10 @@ class HeatMap extends React.Component {
   }
 
   drawLegend() {
-    const baseTemperature = this.state.baseTemperature;
-    const monthlyVariance = this.state.monthlyVariance;
-    const minVariance = this.state.minVariance;
-    const maxVariance = this.state.maxVariance;
     const legendHeight = 100;
     const legendWidth = 400;
-    const legendPadding = 20;
+    const legendPadding = 30;
+    const numberOfColors = this.state.numberOfColors;
     d3.select('#legend').remove();
     const legend = d3
       .selectAll('#heat-map')
@@ -122,17 +125,31 @@ class HeatMap extends React.Component {
       .attr('height', legendHeight)
       .style('background-color', 'green');
 
-    const xScale = d3
+    const legendScale = d3
       .scaleLinear()
-      .domain([minVariance + baseTemperature, maxVariance + baseTemperature])
+      .domain([this.state.minVariance + this.state.baseTemperature, this.state.maxVariance + this.state.baseTemperature])
       .range([legendPadding, legendWidth - legendPadding]);
-    const xAxis = d3.axisBottom(xScale).ticks(10);
+    const legendAxis = d3.axisBottom(legendScale).tickValues(this.setColorBorders(numberOfColors)).tickFormat(d3.format('.2f'));
 
     legend
       .append('g')
-      .attr('id', 'x-axis')
+      .attr('id', 'legend-axis')
       .attr('transform', 'translate( 0, ' + (legendHeight - legendPadding) + ')')
-      .call(xAxis);
+      .call(legendAxis);
+
+    const legendData = this.setColorBorders(numberOfColors);
+    legendData.pop();
+
+    legend
+      .selectAll('rect')
+      .data(legendData)
+      .enter()
+      .append('rect')
+      .attr('height', legendHeight * 0.5)
+      .attr('width', (legendWidth - 2 * legendPadding) / numberOfColors)
+      .attr('x', d => legendScale(d))
+      .attr('y', legendHeight * 0.5 - legendPadding)
+      .attr('fill', d => this.setColor(d, numberOfColors));
   }
 
   render() {
