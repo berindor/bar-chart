@@ -1,6 +1,9 @@
 import './ChoroplethMap.scss';
 import React from 'react';
+import * as topojson from 'topojson';
 import * as d3 from 'd3';
+import * as turf from '@turf/turf';
+import { geojsonType } from '@turf/turf';
 
 class ChoroplethMap extends React.Component {
   async componentDidMount() {
@@ -20,7 +23,7 @@ class ChoroplethMap extends React.Component {
   }
 
   drawChart(educationData, countyData) {
-    console.log(educationData[0]);
+    //    console.log(educationData[0]);
     console.log(countyData);
     d3.select('#map-div').remove();
     const mapWidth = 700;
@@ -29,32 +32,8 @@ class ChoroplethMap extends React.Component {
     d3.select('#map').remove();
     const svgMap = chartDiv.append('svg').attr('id', 'map').attr('width', mapWidth).attr('height', mapHeight).style('background-color', 'green');
 
-    const arcsCoord = countyData.arcs;
-    const nationObj = countyData.objects.nation;
-    console.log('nationObj with arc id-s: ', nationObj);
-
-    const arcIdToCoord = id => {
-      return id > 0 ? arcsCoord[id] : [arcsCoord[-1 * id][1], arcsCoord[-1 * id][0]];
-    };
-
-    const setArcsCoord = arr => {
-      let newArr = [];
-      for (let i = 0; i < arr.length; i++) {
-        if (typeof arr[i] === 'number') {
-          newArr.push(arcIdToCoord(arr[i]));
-        } else {
-          newArr.push(setArcsCoord(arr[i]));
-        }
-      }
-      return newArr;
-    };
-
-    const nationArcsCoord = nationObj.geometries[0].arcs.map(arr => setArcsCoord(arr));
-    var nationCoord = { ...nationObj };
-    nationCoord.geometries[0].arcs = nationArcsCoord;
-    nationCoord.geometries[0].coordinates = nationArcsCoord;
-    console.log('nationObj with arc coordinates', nationCoord);
-    const geojsonNation = [{ type: 'Feature', properties: { name: 'USA' }, geometry: nationCoord.geometries[0] }]; //ezzel se működik a kirajzolás
+    const geojsonNation = topojson.feature(countyData, countyData.objects.nation);
+    console.log('topojson to geojson: ', geojsonNation);
 
     const geojson = {
       //nem kell, csak próba
@@ -117,11 +96,19 @@ class ChoroplethMap extends React.Component {
       ]
     };
 
-    const projection = d3.geoEquirectangular().translate([mapWidth / 4, mapHeight / 3]);
+    const projection = d3.geoEquirectangular(); //nem kell
+    projection.fitExtent(
+      //nem kell
+      [
+        [0, 0],
+        [mapWidth, mapHeight]
+      ],
+      geojsonNation
+    );
 
-    const geoGenerator = d3.geoPath().projection(projection);
+    const geoGenerator = d3.geoPath().projection(null);
 
-    svgMap.append('g').selectAll('path').data(geojson.features).enter().append('path').attr('d', geoGenerator).attr('fill', 'orange');
+    svgMap.append('g').selectAll('path').data(geojsonNation.features).enter().append('path').attr('d', geoGenerator);
   }
 
   render() {
