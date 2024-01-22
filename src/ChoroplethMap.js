@@ -31,6 +31,7 @@ class ChoroplethMap extends React.Component {
     return await fetch('https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json').then(response => response.json());
   }
 
+  //remove minValue? (minValue=0 everywhere)
   setColorBorders(numberOfColors, minValue, maxValue) {
     let arr = [];
     for (let i = 0; i <= numberOfColors; i++) {
@@ -48,18 +49,13 @@ class ChoroplethMap extends React.Component {
   }
 
   drawLegend(numberOfColors, minValue, maxValue) {
-    const legendHeight = 100;
+    const legendHeight = 50;
     const legendWidth = 400;
     const legendPadding = 30;
     d3.select('#legend-div').remove();
     const legendDiv = d3.selectAll('#choropleth-map').append('div').attr('id', 'legend-div');
     d3.select('#legend').remove();
-    const legend = legendDiv
-      .append('svg')
-      .attr('id', 'legend')
-      .attr('width', legendWidth)
-      .attr('height', legendHeight)
-      .style('background-color', 'green');
+    const legend = legendDiv.append('svg').attr('id', 'legend').attr('width', legendWidth).attr('height', legendHeight);
 
     const legendScale = d3
       .scaleLinear()
@@ -92,14 +88,12 @@ class ChoroplethMap extends React.Component {
   }
 
   drawChart(educationData, countyData) {
-    console.log('educationData[0]: ', educationData[0]);
-    console.log('countyData: ', countyData);
     const mapWidth = 1100;
     const mapHeight = 680;
     d3.select('#map-div').remove();
     const chartDiv = d3.selectAll('#choropleth-map').append('div').attr('id', 'map-div');
     d3.select('#map').remove();
-    const svgMap = chartDiv.append('svg').attr('id', 'map').attr('width', mapWidth).attr('height', mapHeight).style('background-color', 'green');
+    const svgMap = chartDiv.append('svg').attr('id', 'map').attr('width', mapWidth).attr('height', mapHeight).style('background-color', 'white');
 
     const geojsonNation = topojson.feature(countyData, countyData.objects.nation);
     const geojsonStates = topojson.feature(countyData, countyData.objects.states);
@@ -112,11 +106,31 @@ class ChoroplethMap extends React.Component {
 
     const maxEducation = d3.max(educationData, d => d.bachelorsOrHigher);
 
+    d3.select('#tooltip').remove();
+    var tooltip = d3.select('#choropleth-map').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
+    const handleMouseover = event => {
+      const [x, y] = d3.pointer(event);
+      const countyFips = event.target.getAttribute('data-fips');
+      const countyObject = educationData.find(obj => obj.fips === Number(countyFips));
+      const htmlText = countyObject.area_name + ' (' + countyObject.state + '): ' + countyObject.bachelorsOrHigher + '%';
+      tooltip
+        .style('visibility', 'visible')
+        .attr('data-fips', countyFips)
+        .attr('data-education', countyObject.bachelorsOrHigher)
+        .html(htmlText)
+        .style('left', x + 'px')
+        .style('top', y + 'px')
+        .style('background-color', 'white');
+    };
+    const handleMouseout = function () {
+      tooltip.style('visibility', 'hidden');
+    };
+
     const nationPath = gMap.selectAll('.nation').data(geojsonNation.features).enter().append('path').attr('d', geoGenerator).attr('class', 'nation');
     nationPath.attr('fill-opacity', '0').attr('stroke', 'red');
     const statesPath = gMap.selectAll('.states').data(geojsonStates.features).enter().append('path').attr('d', geoGenerator).attr('class', 'states');
     statesPath.attr('fill-opacity', 0).attr('stroke', 'black');
-    const countiesPath = gMap
+    gMap
       .selectAll('.county')
       .data(geojsonCounties.features)
       .enter()
@@ -131,7 +145,9 @@ class ChoroplethMap extends React.Component {
       .attr('fill', d => {
         let obj = educationData.find(obj => obj.fips === d.id);
         return this.setColor(obj.bachelorsOrHigher, this.state.numberOfColors, 0, maxEducation);
-      });
+      })
+      .on('mouseover', handleMouseover)
+      .on('mouseout', handleMouseout);
   }
 
   render() {
@@ -144,6 +160,12 @@ function ChoroplethMapPage() {
     <div className="choropleth-map-page">
       <h1 id="title">United States Educational Attainment</h1>
       <div id="description">Percentage of adults age 25 and older with a bachelor's degree or higher (2010-2014)</div>
+      <div id="source">
+        Source of data:{' '}
+        <a href="https://www.ers.usda.gov/data-products/county-level-data-sets/county-level-data-sets-download-data/">
+          USDA Economic Research Service
+        </a>
+      </div>
       <ChoroplethMap />
     </div>
   );

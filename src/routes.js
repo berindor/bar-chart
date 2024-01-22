@@ -26,9 +26,9 @@ const routes = [
     name: 'Heat Map'
   },
   {
-    path: '/choroplet-map',
+    path: '/choropleth-map',
     element: <ChoroplethMapPage />,
-    name: 'Choroplet Map'
+    name: 'Choropleth Map'
   }
 ];
 
