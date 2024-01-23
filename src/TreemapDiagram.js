@@ -46,6 +46,7 @@ class TreemapDiagramPage extends React.Component {
   drawPage() {
     this.drawHeader();
     this.drawTreemap(this.state.dataset);
+    this.drawLegend(this.state.dataset);
   }
 
   drawNavBar() {
@@ -119,12 +120,50 @@ class TreemapDiagramPage extends React.Component {
       */
   }
 
+  createColors(numberOfColors) {
+    //for at most 24 colors
+    let arr = [];
+    function findColor(number) {
+      if (number < 12) {
+        return 'hsl(' + 30 * number + ', 100%, 50%)';
+      } else {
+        return 'hsl(' + (30 * number - 360) + ', 100%, 70%)';
+      }
+    }
+    for (let n = 0; n < numberOfColors; n++) {
+      arr.push(findColor(n));
+    }
+    return arr;
+  }
+
   drawTreemap(dataset) {
     console.log(dataset);
   }
 
   drawLegend(dataset) {
-    console.log(dataset);
+    const legendWidth = 400;
+    const legendHeight = 400;
+    d3.selectAll('#legend').remove();
+    d3.select('.TreemapDiagramPage').append('svg').attr('id', 'legend').attr('width', legendWidth).attr('height', legendHeight);
+    const colors = this.createColors(dataset.children.length);
+    const legendData = colors.map((elem, index) => [elem, dataset.children[index].name]);
+    function findPlace(itemIndex) {
+      const x = ((itemIndex % 3) * legendWidth) / 3;
+      const y = (((itemIndex - (itemIndex % 3)) / 3) * legendHeight) / 6;
+      return [x, y];
+    }
+    d3.select('#legend')
+      .selectAll('rect')
+      .data(legendData)
+      .enter()
+      .append('rect')
+      .attr('class', 'legend-item')
+      .attr('fill', d => d[0])
+      .attr('x', (d, i) => findPlace(i)[0])
+      .attr('y', (d, i) => findPlace(i)[1])
+      .text(d => d[1])
+      .attr('x', (d, i) => findPlace(i)[0] + 40)
+      .attr('y', (d, i) => findPlace(i)[1] + 20);
   }
 
   render() {
