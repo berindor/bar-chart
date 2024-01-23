@@ -16,9 +16,8 @@ class TreemapDiagramPage extends React.Component {
   }
 
   async componentDidMount() {
-    const dataset = await this.loadData();
-    console.log(dataset);
-    //    this.drawPage;
+    await this.loadData();
+    this.drawPage();
   }
 
   async loadData() {
@@ -42,65 +41,94 @@ class TreemapDiagramPage extends React.Component {
     let { link, title, description } = data[this.state.mapType];
     const dataset = await fetch(link).then(response => response.json());
     this.setState({ link, title, description, dataset });
-    console.log('state:', this.state);
-    return dataset;
   }
 
   drawPage() {
+    this.drawHeader();
+    this.drawTreemap(this.state.dataset);
+  }
+
+  drawNavBar() {
     return (
-      <div className="TreemapDiagramPage">
-        {this.drawHeader()}
-        <div id="treemap-diagram"></div>
+      <div id="nav-bar">
+        Chose dataset:
+        <ul>
+          <li>
+            <button
+              onClick={() => {
+                this.setState({ mapType: 'VideoGame' });
+                this.componentDidMount();
+              }}
+            >
+              Video Game Data Set
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => {
+                this.setState({ mapType: 'Movies' });
+                this.componentDidMount();
+              }}
+            >
+              Movies Data Set
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => {
+                this.setState({ mapType: 'Kickstarter' });
+                this.componentDidMount();
+              }}
+            >
+              Kickstarter Data Set
+            </button>
+          </li>
+        </ul>
       </div>
     );
   }
 
   drawHeader() {
-    return (
-      <div id="header">
-        <h1 id="title">{this.state.title}</h1>
-        <div id="description">{this.state.description}</div>
-        <div id="menu">
-          Chose dataset:
-          <ul>
-            <li>
-              <button
-                onClick={() => {
-                  this.setState({ mapType: 'VideoGame' });
-                  this.componentDidMount();
-                }}
-              >
-                Video Game Data Set
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => {
-                  this.setState({ mapType: 'Movies' });
-                  this.componentDidMount();
-                }}
-              >
-                Movies Data Set
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => {
-                  this.setState({ mapType: 'Kickstarter' });
-                  this.componentDidMount();
-                }}
-              >
-                Kickstarter Data Set
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    );
+    d3.selectAll('#header').remove();
+    d3.select('.TreemapDiagramPage').append('div').attr('id', 'header');
+    d3.select('#header').append('h1').text(this.state.title);
+    d3.select('#header').append('div').text(this.state.description).attr('id', 'description');
+    // Ez itt lent a navbar próbálkozás. Nem sikerült a handleClick függvényt működővé varázsolni. A drawNavBar függvény működik.
+    /*
+    d3.select('#header').append('div').html('Chose dataset: ').attr('id', 'nav-bar');
+    d3.select('#nav-bar').append('ul');
+    const navBarList = [
+      ['Video Game Data Set', 'VideoGame'],
+      ['Movies Data Set', 'Movies'],
+      ['Kickstarter Data Set', 'Kickstarter']
+    ];
+    function handleClick(mapType) {
+      return function () {
+        this.setState({ mapType });
+        this.componentDidMount();
+      };
+    }
+    d3.select('ul')
+      .selectAll('li')
+      .data(navBarList)
+      .enter()
+      .append('li')
+      .append('button')
+      .html(d => d[0])
+      .attr('onClick', d => handleClick(d[1]));
+      */
+  }
+
+  drawTreemap(dataset) {
+    console.log(dataset);
+  }
+
+  drawLegend(dataset) {
+    console.log(dataset);
   }
 
   render() {
-    return this.drawPage();
+    return <div className="TreemapDiagramPage">{this.drawNavBar()}</div>;
   }
 }
 
