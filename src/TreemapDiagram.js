@@ -90,7 +90,7 @@ class TreemapDiagramPage extends React.Component {
   drawHeader(title, description) {
     d3.selectAll('#header').remove();
     d3.select('.TreemapDiagramPage').append('div').attr('id', 'header');
-    d3.select('#header').append('h1').text(title);
+    d3.select('#header').append('h1').text(title).attr('id', 'title');
     d3.select('#header').append('div').text(description).attr('id', 'description');
     // Ez itt lent a navbar próbálkozás. Nem sikerült a handleClick függvényt működővé varázsolni. A drawNavBar függvény működik.
     /*
@@ -118,9 +118,9 @@ class TreemapDiagramPage extends React.Component {
       */
   }
 
-  createColors(numberOfColors) {
+  createCategoryColors(dataset) {
     //for at most 24 colors
-    let arr = [];
+    let categoryColors = [];
     function findColor(number) {
       if (number < 12) {
         return 'hsl(' + 30 * number + ', 100%, 50%)';
@@ -128,14 +128,53 @@ class TreemapDiagramPage extends React.Component {
         return 'hsl(' + (30 * number - 360) + ', 100%, 70%)';
       }
     }
-    for (let n = 0; n < numberOfColors; n++) {
-      arr.push(findColor(n));
+    for (let n = 0; n < dataset.children.length; n++) {
+      categoryColors.push([findColor(n), dataset.children[n].name]);
     }
-    return arr;
+    return categoryColors;
+  }
+
+  findColor(dataset, category) {
+    const categoryColors = this.createCategoryColors(dataset);
+    const subarr = categoryColors.find(subarr => subarr[1] === category);
+    return subarr[0];
   }
 
   drawTreemap(dataset) {
     console.log(dataset);
+    const treemapWidth = 900;
+    const treemapHeight = 500;
+
+    d3.select('#treemap').remove();
+    const svgTreemap = d3.select('.TreemapDiagramPage').append('svg').attr('id', 'treemap').attr('width', treemapWidth).attr('height', treemapHeight);
+
+    const root = d3.hierarchy(dataset).sum(d => d.value);
+    d3.treemap().size([treemapWidth, treemapHeight]).padding(2)(root);
+    console.log('root: ', root);
+
+    const treemapTiles = svgTreemap
+      .selectAll('g')
+      .data(root.leaves())
+      .enter()
+      .append('g')
+      .attr('transform', d => 'translate(' + d.x0 + ', ' + d.y0 + ')')
+      .attr('width', d => d.x1 - d.x0)
+      .attr('height', d => d.y1 - d.y0);
+
+    treemapTiles
+      .append('rect')
+      .attr('class', 'tile')
+      .attr('width', d => d.x1 - d.x0)
+      .attr('height', d => d.y1 - d.y0)
+      .attr('data-name', d => d.data.name)
+      .attr('data-category', d => d.data.category)
+      .attr('data-value', d => d.data.value)
+      .style('fill', d => this.findColor(dataset, d.data.category));
+    treemapTiles
+      .append('text')
+      .text(d => d.data.name)
+      .style('font-size', '11px')
+      .attr('transform', 'translate(5, 15)');
   }
 
   drawLegend(dataset) {
@@ -144,8 +183,8 @@ class TreemapDiagramPage extends React.Component {
     const itemSize = 30;
     d3.selectAll('#legend').remove();
     d3.select('.TreemapDiagramPage').append('svg').attr('id', 'legend').attr('width', legendWidth).attr('height', legendHeight);
-    const colors = this.createColors(dataset.children.length);
-    const legendData = colors.map((elem, index) => [elem, dataset.children[index].name]);
+    const categoryColors = this.createCategoryColors(dataset);
+    //    console.log('categoryColors: ', categoryColors);
     function findPlace(itemIndex) {
       const x = ((itemIndex % 3) * legendWidth) / 3;
       const y = (((itemIndex - (itemIndex % 3)) / 3) * legendHeight) / 6;
@@ -154,7 +193,7 @@ class TreemapDiagramPage extends React.Component {
     const legendItems = d3
       .select('#legend')
       .selectAll('g')
-      .data(legendData)
+      .data(categoryColors)
       .enter()
       .append('g')
       .attr('transform', (d, i) => 'translate(' + findPlace(i)[0] + ', ' + findPlace(i)[1] + ')');
