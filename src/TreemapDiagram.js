@@ -6,18 +6,15 @@ class TreemapDiagramPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      mapType: 'VideoGame',
-      dataset: {},
-      title: '',
-      description: ''
+      mapType: 'VideoGame'
     };
     this.loadData = this.loadData.bind(this);
     this.drawPage = this.drawPage.bind(this);
   }
 
   async componentDidMount() {
-    await this.loadData();
-    this.drawPage();
+    const { title, description, dataset } = await this.loadData();
+    this.drawPage(title, description, dataset);
   }
 
   async loadData() {
@@ -41,12 +38,13 @@ class TreemapDiagramPage extends React.Component {
     let { link, title, description } = data[this.state.mapType];
     const dataset = await fetch(link).then(response => response.json());
     this.setState({ link, title, description, dataset });
+    return { title, description, dataset };
   }
 
-  drawPage() {
-    this.drawHeader();
-    this.drawTreemap(this.state.dataset);
-    this.drawLegend(this.state.dataset);
+  drawPage(title, description, dataset) {
+    this.drawHeader(title, description);
+    this.drawTreemap(dataset);
+    this.drawLegend(dataset);
   }
 
   drawNavBar() {
@@ -89,11 +87,11 @@ class TreemapDiagramPage extends React.Component {
     );
   }
 
-  drawHeader() {
+  drawHeader(title, description) {
     d3.selectAll('#header').remove();
     d3.select('.TreemapDiagramPage').append('div').attr('id', 'header');
-    d3.select('#header').append('h1').text(this.state.title);
-    d3.select('#header').append('div').text(this.state.description).attr('id', 'description');
+    d3.select('#header').append('h1').text(title);
+    d3.select('#header').append('div').text(description).attr('id', 'description');
     // Ez itt lent a navbar próbálkozás. Nem sikerült a handleClick függvényt működővé varázsolni. A drawNavBar függvény működik.
     /*
     d3.select('#header').append('div').html('Chose dataset: ').attr('id', 'nav-bar');
@@ -141,8 +139,9 @@ class TreemapDiagramPage extends React.Component {
   }
 
   drawLegend(dataset) {
-    const legendWidth = 400;
+    const legendWidth = 500;
     const legendHeight = 400;
+    const itemSize = 30;
     d3.selectAll('#legend').remove();
     d3.select('.TreemapDiagramPage').append('svg').attr('id', 'legend').attr('width', legendWidth).attr('height', legendHeight);
     const colors = this.createColors(dataset.children.length);
@@ -152,18 +151,23 @@ class TreemapDiagramPage extends React.Component {
       const y = (((itemIndex - (itemIndex % 3)) / 3) * legendHeight) / 6;
       return [x, y];
     }
-    d3.select('#legend')
-      .selectAll('rect')
+    const legendItems = d3
+      .select('#legend')
+      .selectAll('g')
       .data(legendData)
       .enter()
+      .append('g')
+      .attr('transform', (d, i) => 'translate(' + findPlace(i)[0] + ', ' + findPlace(i)[1] + ')');
+    legendItems
       .append('rect')
       .attr('class', 'legend-item')
-      .attr('fill', d => d[0])
-      .attr('x', (d, i) => findPlace(i)[0])
-      .attr('y', (d, i) => findPlace(i)[1])
+      .attr('width', itemSize)
+      .attr('height', itemSize)
+      .attr('fill', d => d[0]);
+    legendItems
+      .append('text')
       .text(d => d[1])
-      .attr('x', (d, i) => findPlace(i)[0] + 40)
-      .attr('y', (d, i) => findPlace(i)[1] + 20);
+      .attr('transform', 'translate(' + Number(itemSize + 5) + ', ' + Number(itemSize / 2 + 5) + ')');
   }
 
   render() {
