@@ -165,7 +165,7 @@ class TreemapDiagramPage extends React.Component {
 
   drawLegend(categoryList) {
     const itemSize = 30;
-    const legendWidth = 800;
+    const legendWidth = 600;
     const legendHeight = Math.ceil(categoryList.length / 3) * itemSize * 1.3 + 40;
 
     d3.selectAll('#legend').remove();

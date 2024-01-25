@@ -1,7 +1,6 @@
 .TreemapDiagramPage {
   display: flex;
   flex-direction: column;
-  align-items: center;
 
   #nav-bar {
     font-size: 20px;
@@ -34,6 +33,13 @@
     font-size: 20px;
     font-weight: 500;
     padding-bottom: 40px;
+  }
+
+  #nav-bar,
+  #treemap-div,
+  #legend {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   #treemap-div {
