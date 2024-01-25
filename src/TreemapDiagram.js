@@ -2,49 +2,38 @@ import './TreemapDiagram.scss';
 import React from 'react';
 import * as d3 from 'd3';
 
-class TreemapDiagramPage extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      mapType: 'VideoGame'
-    };
-    this.loadData = this.loadData.bind(this);
-    this.drawPage = this.drawPage.bind(this);
-    this.handleClick = this.handleClick.bind(this);
+const datasets = {
+  Kickstarter: {
+    link: 'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/kickstarter-funding-data.json',
+    title: 'Kickstarter Pledges',
+    description: 'Top 100 Most Pledged Kickstarter Campaigns Grouped By Category'
+  },
+  Movies: {
+    link: 'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/movie-data.json',
+    title: 'Movie Sales',
+    description: 'Top 100 Highest Grossing Movies Grouped By Genre'
+  },
+  VideoGame: {
+    link: 'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json',
+    title: 'Video Game Sales',
+    description: 'Top 100 Most Sold Video Games Grouped by Platform'
   }
+};
 
+class TreemapDiagramPage extends React.Component {
   async componentDidMount() {
-    const { title, description, dataset } = await this.loadData();
+    const { title, description, dataset } = await this.loadData('VideoGame');
     this.drawPage(title, description, dataset);
   }
 
-  async loadData() {
-    const data = {
-      Kickstarter: {
-        link: 'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/kickstarter-funding-data.json',
-        title: 'Kickstarter Pledges',
-        description: 'Top 100 Most Pledged Kickstarter Campaigns Grouped By Category'
-      },
-      Movies: {
-        link: 'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/movie-data.json',
-        title: 'Movie Sales',
-        description: 'Top 100 Highest Grossing Movies Grouped By Genre'
-      },
-      VideoGame: {
-        link: 'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json',
-        title: 'Video Game Sales',
-        description: 'Top 100 Most Sold Video Games Grouped by Platform'
-      }
-    };
-    let { link, title, description } = data[this.state.mapType];
+  async loadData(mapType) {
+    let { link, title, description } = datasets[mapType];
     const dataset = await fetch(link).then(response => response.json());
-    this.setState({ link, title, description, dataset });
     return { title, description, dataset };
   }
 
   async handleClick(mapType) {
-    this.setState({ mapType });
-    const { title, description, dataset } = await this.loadData();
+    const { title, description, dataset } = await this.loadData(mapType);
     this.drawPage(title, description, dataset);
   }
 
@@ -75,24 +64,20 @@ class TreemapDiagramPage extends React.Component {
 
   createCategoryColors(categoryList) {
     //for at most 24 colors
-    let categoryColors = [];
     function createColor(number) {
       if (number < 12) {
-        return 'hsl(' + 30 * number + ', 100%, 50%)';
+        return `hsl( ${30 * number}, 100%, 50%)`;
       } else {
-        return 'hsl(' + (30 * number - 360) + ', 100%, 70%)';
+        return `hsl(${30 * number - 360}, 100%, 70%)`;
       }
     }
-    for (let n = 0; n < categoryList.length; n++) {
-      categoryColors.push([createColor(n), categoryList[n]]);
-    }
-    return categoryColors;
+    return categoryList.map((category, i) => [createColor(i), category]);
   }
 
   findCategoryColor(categoryList, category) {
     const categoryColors = this.createCategoryColors(categoryList);
-    const subarr = categoryColors.find(subarr => subarr[1] === category); //nem sikerült destrukturálva, valami nem működött
-    return subarr[0];
+    const [color] = categoryColors.find(([color, cat]) => cat === category);
+    return color;
   }
 
   drawTreemap(dataset) {
@@ -100,7 +85,10 @@ class TreemapDiagramPage extends React.Component {
     const treemapHeight = 500;
 
     d3.select('#treemap-div').remove();
-    d3.select('.TreemapDiagramPage').append('div').attr('id', 'treemap-div');
+    d3.select('.TreemapDiagramPage')
+      .append('div')
+      .attr('id', 'treemap-div')
+      .style('width', treemapWidth + 'px');
 
     const root = d3.hierarchy(dataset).sum(d => d.value);
     root.sort((a, b) => b.value - a.value);
@@ -147,7 +135,7 @@ class TreemapDiagramPage extends React.Component {
       const value = event.target.getAttribute('data-value');
       const category = event.target.getAttribute('data-category');
       const name = event.target.getAttribute('data-name');
-      const htmlText = name + ' <br> Category: ' + category + ' <br> Value: ' + value;
+      const htmlText = `${name} <br> Category: ${category} <br> Value: ${value}`;
       const x0 = event.target.getAttribute('x0');
       const y0 = event.target.getAttribute('y0');
       var leftPosition = Number(event.offsetX + 5);
@@ -179,21 +167,24 @@ class TreemapDiagramPage extends React.Component {
     const itemSize = 30;
     const legendWidth = 800;
     const legendHeight = Math.ceil(categoryList.length / 3) * itemSize * 1.3 + 40;
+
     d3.selectAll('#legend').remove();
     const legendSvg = d3.select('.TreemapDiagramPage').append('svg').attr('id', 'legend').attr('width', legendWidth).attr('height', legendHeight);
     legendSvg.append('text').text('Categories: ').attr('transform', 'translate(5 , 25)').style('font-size', '20px');
+
     function findLegendPlace(itemIndex) {
       const x = ((itemIndex % 3) * legendWidth) / 3;
-      const y = 35 + ((itemIndex - (itemIndex % 3)) / 3) * itemSize * 1.3;
+      const y = 35 + Math.floor(itemIndex / 3) * itemSize * 1.3;
       return [x, y];
     }
+
     const legendItems = d3
       .select('#legend')
       .selectAll('g')
       .data(categoryList)
       .enter()
       .append('g')
-      .attr('transform', (d, i) => 'translate(' + findLegendPlace(i)[0] + ', ' + findLegendPlace(i)[1] + ')');
+      .attr('transform', (d, i) => `translate(${findLegendPlace(i)[0]}, ${findLegendPlace(i)[1]})`);
     legendItems
       .append('rect')
       .attr('class', 'legend-item')
@@ -203,7 +194,7 @@ class TreemapDiagramPage extends React.Component {
     legendItems
       .append('text')
       .text(d => d)
-      .attr('transform', 'translate(' + Number(itemSize + 5) + ', ' + Number(itemSize / 2 + 5) + ')');
+      .attr('transform', `translate(${Number(itemSize + 5)}, ${Number(itemSize / 2 + 5)})`);
   }
 
   render() {

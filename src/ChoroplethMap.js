@@ -3,22 +3,14 @@ import React from 'react';
 import * as topojson from 'topojson';
 import * as d3 from 'd3';
 
-class ChoroplethMap extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      numberOfColors: 6
-    };
-    this.drawLegend = this.drawLegend.bind(this);
-    this.setColor = this.setColor.bind(this);
-  }
+const numberOfColors = 7;
 
+class ChoroplethMap extends React.Component {
   async componentDidMount() {
-    const educationData = await this.loadEducationData();
-    const countyData = await this.loadCountyData();
+    const [educationData, countyData] = await Promise.all([this.loadEducationData(), this.loadCountyData()]);
     this.drawChart(educationData, countyData);
-    const maxEducation = d3.max(educationData, d => d.bachelorsOrHigher);
-    this.drawLegend(this.state.numberOfColors, 0, maxEducation);
+    const educationMaxValue = d3.max(educationData, d => d.bachelorsOrHigher);
+    this.drawLegend(educationMaxValue);
   }
 
   async loadEducationData() {
@@ -31,24 +23,23 @@ class ChoroplethMap extends React.Component {
     return await fetch('https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json').then(response => response.json());
   }
 
-  //remove minValue? (minValue=0 everywhere)
-  setColorBorders(numberOfColors, minValue, maxValue) {
+  getColorBorders(maxValue) {
     let arr = [];
     for (let i = 0; i <= numberOfColors; i++) {
-      arr.push((minValue + (maxValue - minValue) * i) / numberOfColors);
+      arr.push((maxValue * i) / numberOfColors);
     }
     return arr;
   }
 
-  setColor(education, numberOfColors, minValue, maxValue) {
-    const colorBorders = this.setColorBorders(numberOfColors, minValue, maxValue);
+  getColor(education, maxValue) {
+    const colorBorders = this.getColorBorders(maxValue);
     const upperBorderIndex = colorBorders.findIndex(element => element > education);
     const lightness = 95 - (upperBorderIndex * (95 - 20)) / numberOfColors;
-    const color = 'hsl(39, 100%,' + lightness + '%)';
+    const color = `hsl(39, 100%, ${lightness}%)`;
     return color;
   }
 
-  drawLegend(numberOfColors, minValue, maxValue) {
+  drawLegend(maxValue) {
     const legendHeight = 50;
     const legendWidth = 400;
     const legendPadding = 30;
@@ -59,20 +50,20 @@ class ChoroplethMap extends React.Component {
 
     const legendScale = d3
       .scaleLinear()
-      .domain([minValue, maxValue])
+      .domain([0, maxValue])
       .range([legendPadding, legendWidth - legendPadding]);
     const legendAxis = d3
       .axisBottom(legendScale)
-      .tickValues(this.setColorBorders(numberOfColors, minValue, maxValue))
+      .tickValues(this.getColorBorders(maxValue))
       .tickFormat(num => d3.format('.1%')(num / 100));
 
     legend
       .append('g')
       .attr('id', 'legend-axis')
-      .attr('transform', 'translate( 0, ' + (legendHeight - legendPadding) + ')')
+      .attr('transform', `translate( 0, ${legendHeight - legendPadding})`)
       .call(legendAxis);
 
-    const legendData = this.setColorBorders(numberOfColors, minValue, maxValue);
+    const legendData = this.getColorBorders(maxValue);
     legendData.pop();
 
     legend
@@ -84,7 +75,7 @@ class ChoroplethMap extends React.Component {
       .attr('width', (legendWidth - 2 * legendPadding) / numberOfColors)
       .attr('x', d => legendScale(d))
       .attr('y', legendHeight * 0.5 - legendPadding)
-      .attr('fill', d => this.setColor(d, numberOfColors, minValue, maxValue));
+      .attr('fill', d => this.getColor(d, maxValue));
   }
 
   drawChart(educationData, countyData) {
@@ -95,7 +86,6 @@ class ChoroplethMap extends React.Component {
     d3.select('#map').remove();
     const svgMap = chartDiv.append('svg').attr('id', 'map').attr('width', mapWidth).attr('height', mapHeight).style('background-color', 'white');
 
-    const geojsonNation = topojson.feature(countyData, countyData.objects.nation);
     const geojsonStates = topojson.feature(countyData, countyData.objects.states);
     const geojsonCounties = topojson.feature(countyData, countyData.objects.counties);
 
@@ -104,7 +94,7 @@ class ChoroplethMap extends React.Component {
     const gMap = svgMap.append('g').attr('id', 'gMap');
     gMap.attr('transform', 'translate(100, 30)');
 
-    const maxEducation = d3.max(educationData, d => d.bachelorsOrHigher);
+    const educationMaxValue = d3.max(educationData, d => d.bachelorsOrHigher);
 
     d3.select('#tooltip').remove();
     var tooltip = d3.select('#choropleth-map').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
@@ -112,7 +102,7 @@ class ChoroplethMap extends React.Component {
       const [x, y] = d3.pointer(event);
       const countyFips = event.target.getAttribute('data-fips');
       const countyObject = educationData.find(obj => obj.fips === Number(countyFips));
-      const htmlText = countyObject.area_name + ' (' + countyObject.state + '): ' + countyObject.bachelorsOrHigher + '%';
+      const htmlText = `${countyObject.area_name} (${countyObject.state}): ${countyObject.bachelorsOrHigher}%`;
       tooltip
         .style('visibility', 'visible')
         .attr('data-fips', countyFips)
@@ -126,8 +116,6 @@ class ChoroplethMap extends React.Component {
       tooltip.style('visibility', 'hidden');
     };
 
-    const nationPath = gMap.selectAll('.nation').data(geojsonNation.features).enter().append('path').attr('d', geoGenerator).attr('class', 'nation');
-    nationPath.attr('fill-opacity', '0').attr('stroke', 'red');
     const statesPath = gMap.selectAll('.states').data(geojsonStates.features).enter().append('path').attr('d', geoGenerator).attr('class', 'states');
     statesPath.attr('fill-opacity', 0).attr('stroke', 'black');
     gMap
@@ -144,7 +132,7 @@ class ChoroplethMap extends React.Component {
       })
       .attr('fill', d => {
         let obj = educationData.find(obj => obj.fips === d.id);
-        return this.setColor(obj.bachelorsOrHigher, this.state.numberOfColors, 0, maxEducation);
+        return this.getColor(obj.bachelorsOrHigher, educationMaxValue);
       })
       .on('mouseover', handleMouseover)
       .on('mouseout', handleMouseout);
