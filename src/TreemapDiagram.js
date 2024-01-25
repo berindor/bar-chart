@@ -77,30 +77,6 @@ class TreemapDiagramPage extends React.Component {
     d3.select('.TreemapDiagramPage').append('div').attr('id', 'header');
     d3.select('#header').append('h1').text(title).attr('id', 'title');
     d3.select('#header').append('div').text(description).attr('id', 'description');
-    // Ez itt lent a navbar próbálkozás. Nem sikerült a handleClick függvényt működővé varázsolni. A drawNavBar függvény működik.
-    /*
-    d3.select('#header').append('div').html('Chose dataset: ').attr('id', 'nav-bar');
-    d3.select('#nav-bar').append('ul');
-    const navBarList = [
-      ['Video Game Data Set', 'VideoGame'],
-      ['Movies Data Set', 'Movies'],
-      ['Kickstarter Data Set', 'Kickstarter']
-    ];
-    function handleClick(mapType) {
-      return function () {
-        this.setState({ mapType });
-        this.componentDidMount();
-      };
-    }
-    d3.select('ul')
-      .selectAll('li')
-      .data(navBarList)
-      .enter()
-      .append('li')
-      .append('button')
-      .html(d => d[0])
-      .attr('onClick', d => handleClick(d[1]));
-      */
   }
 
   createCategoryColors(categoryList) {
@@ -126,7 +102,6 @@ class TreemapDiagramPage extends React.Component {
   }
 
   drawTreemap(dataset) {
-    console.log(dataset);
     const treemapWidth = 700;
     const treemapHeight = 500;
 
@@ -137,9 +112,7 @@ class TreemapDiagramPage extends React.Component {
     const root = d3.hierarchy(dataset).sum(d => d.value);
     root.sort((a, b) => b.value - a.value);
     d3.treemap().size([treemapWidth, treemapHeight]).padding(2)(root);
-    console.log('root: ', root);
     const categoryList = root.children.map(node => node.data.name);
-    console.log('categoryList: ', categoryList);
 
     const treemapTiles = svgTreemap
       .selectAll('g')
@@ -164,11 +137,16 @@ class TreemapDiagramPage extends React.Component {
     treemapTiles
       .append('text')
       .text(d => d.data.name)
+      .attr('data-name', d => d.data.name)
+      .attr('data-category', d => d.data.category)
+      .attr('data-value', d => d.data.value)
       .style('font-size', '11px')
       .attr('transform', 'translate(5, 15)');
 
     var tooltip = d3.select('#treemap-div').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
     const handleMouseover = function (event) {
+      console.log('event: ', event);
+      console.log('mouseEvent: ', MouseEvent);
       const value = event.target.getAttribute('data-value');
       const category = event.target.getAttribute('data-category');
       const name = event.target.getAttribute('data-name');
@@ -179,14 +157,14 @@ class TreemapDiagramPage extends React.Component {
         .attr('data-category', category)
         .attr('data-name', name)
         .html(htmlText)
-        .style('left', event.target.getAttribute('data-x0') - 5 + 'px')
-        .style('top', event.target.getAttribute('data-y0') - 5 + 'px');
+        .style('left', event.offsetX + 5 + 'px')
+        .style('top', event.offsetY - 65 + 'px');
     };
     const handleMouseout = function () {
       tooltip.style('visibility', 'hidden');
     };
 
-    treemapTiles.on('mouseover', handleMouseover).on('mouseout', handleMouseout);
+    treemapTiles.on('mousemove', handleMouseover).on('mouseout', handleMouseout);
 
     this.drawLegend(categoryList);
   }
@@ -197,7 +175,6 @@ class TreemapDiagramPage extends React.Component {
     const itemSize = 30;
     d3.selectAll('#legend').remove();
     d3.select('.TreemapDiagramPage').append('svg').attr('id', 'legend').attr('width', legendWidth).attr('height', legendHeight);
-    //const categoryColors = this.createCategoryColors(dataset.children);
     function findLegendPlace(itemIndex) {
       const x = ((itemIndex % 3) * legendWidth) / 3;
       const y = (((itemIndex - (itemIndex % 3)) / 3) * legendHeight) / 6;
