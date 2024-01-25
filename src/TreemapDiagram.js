@@ -130,8 +130,9 @@ class TreemapDiagramPage extends React.Component {
     const treemapWidth = 700;
     const treemapHeight = 500;
 
-    d3.select('#treemap').remove();
-    const svgTreemap = d3.select('.TreemapDiagramPage').append('svg').attr('id', 'treemap').attr('width', treemapWidth).attr('height', treemapHeight);
+    d3.select('#treemap-div').remove();
+    d3.select('.TreemapDiagramPage').append('div').attr('id', 'treemap-div');
+    const svgTreemap = d3.select('#treemap-div').append('svg').attr('id', 'treemap').attr('width', treemapWidth).attr('height', treemapHeight);
 
     const root = d3.hierarchy(dataset).sum(d => d.value);
     root.sort((a, b) => b.value - a.value);
@@ -157,12 +158,35 @@ class TreemapDiagramPage extends React.Component {
       .attr('data-name', d => d.data.name)
       .attr('data-category', d => d.data.category)
       .attr('data-value', d => d.data.value)
+      .attr('data-x0', d => d.x0)
+      .attr('data-y0', d => d.y0)
       .style('fill', d => this.findCategoryColor(categoryList, d.data.category));
     treemapTiles
       .append('text')
       .text(d => d.data.name)
       .style('font-size', '11px')
       .attr('transform', 'translate(5, 15)');
+
+    var tooltip = d3.select('#treemap-div').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
+    const handleMouseover = function (event) {
+      const value = event.target.getAttribute('data-value');
+      const category = event.target.getAttribute('data-category');
+      const name = event.target.getAttribute('data-name');
+      const htmlText = name + ' <br> Category: ' + category + ' <br> Value: ' + value;
+      tooltip
+        .style('visibility', 'visible')
+        .attr('data-value', value)
+        .attr('data-category', category)
+        .attr('data-name', name)
+        .html(htmlText)
+        .style('left', event.target.getAttribute('data-x0') - 5 + 'px')
+        .style('top', event.target.getAttribute('data-y0') - 5 + 'px');
+    };
+    const handleMouseout = function () {
+      tooltip.style('visibility', 'hidden');
+    };
+
+    treemapTiles.on('mouseover', handleMouseover).on('mouseout', handleMouseout);
 
     this.drawLegend(categoryList);
   }
