@@ -10,6 +10,7 @@ class TreemapDiagramPage extends React.Component {
     };
     this.loadData = this.loadData.bind(this);
     this.drawPage = this.drawPage.bind(this);
+    this.handleClick = this.handleClick.bind(this);
   }
 
   async componentDidMount() {
@@ -41,10 +42,15 @@ class TreemapDiagramPage extends React.Component {
     return { title, description, dataset };
   }
 
+  async handleClick(mapType) {
+    this.setState({ mapType });
+    const { title, description, dataset } = await this.loadData();
+    this.drawPage(title, description, dataset);
+  }
+
   drawPage(title, description, dataset) {
     this.drawHeader(title, description);
     this.drawTreemap(dataset);
-    this.drawLegend(dataset);
   }
 
   drawNavBar() {
@@ -53,34 +59,13 @@ class TreemapDiagramPage extends React.Component {
         Chose dataset:
         <ul>
           <li>
-            <button
-              onClick={() => {
-                this.setState({ mapType: 'VideoGame' });
-                this.componentDidMount();
-              }}
-            >
-              Video Game Data Set
-            </button>
+            <button onClick={() => this.handleClick('VideoGame')}>Video Game Data Set</button>
           </li>
           <li>
-            <button
-              onClick={() => {
-                this.setState({ mapType: 'Movies' });
-                this.componentDidMount();
-              }}
-            >
-              Movies Data Set
-            </button>
+            <button onClick={() => this.handleClick('Movies')}>Movies Data Set</button>
           </li>
           <li>
-            <button
-              onClick={() => {
-                this.setState({ mapType: 'Kickstarter' });
-                this.componentDidMount();
-              }}
-            >
-              Kickstarter Data Set
-            </button>
+            <button onClick={() => this.handleClick('Kickstarter')}>Kickstarter Data Set</button>
           </li>
         </ul>
       </div>
@@ -118,39 +103,42 @@ class TreemapDiagramPage extends React.Component {
       */
   }
 
-  createCategoryColors(dataset) {
+  createCategoryColors(categoryList) {
     //for at most 24 colors
     let categoryColors = [];
-    function findColor(number) {
+    function createColor(number) {
       if (number < 12) {
         return 'hsl(' + 30 * number + ', 100%, 50%)';
       } else {
         return 'hsl(' + (30 * number - 360) + ', 100%, 70%)';
       }
     }
-    for (let n = 0; n < dataset.children.length; n++) {
-      categoryColors.push([findColor(n), dataset.children[n].name]);
+    for (let n = 0; n < categoryList.length; n++) {
+      categoryColors.push([createColor(n), categoryList[n]]);
     }
     return categoryColors;
   }
 
-  findColor(dataset, category) {
-    const categoryColors = this.createCategoryColors(dataset);
-    const subarr = categoryColors.find(subarr => subarr[1] === category);
+  findCategoryColor(categoryList, category) {
+    const categoryColors = this.createCategoryColors(categoryList);
+    const subarr = categoryColors.find(subarr => subarr[1] === category); //nem sikerült destrukturálva, valami nem működött
     return subarr[0];
   }
 
   drawTreemap(dataset) {
     console.log(dataset);
-    const treemapWidth = 900;
+    const treemapWidth = 700;
     const treemapHeight = 500;
 
     d3.select('#treemap').remove();
     const svgTreemap = d3.select('.TreemapDiagramPage').append('svg').attr('id', 'treemap').attr('width', treemapWidth).attr('height', treemapHeight);
 
     const root = d3.hierarchy(dataset).sum(d => d.value);
+    root.sort((a, b) => b.value - a.value);
     d3.treemap().size([treemapWidth, treemapHeight]).padding(2)(root);
     console.log('root: ', root);
+    const categoryList = root.children.map(node => node.data.name);
+    console.log('categoryList: ', categoryList);
 
     const treemapTiles = svgTreemap
       .selectAll('g')
@@ -169,23 +157,24 @@ class TreemapDiagramPage extends React.Component {
       .attr('data-name', d => d.data.name)
       .attr('data-category', d => d.data.category)
       .attr('data-value', d => d.data.value)
-      .style('fill', d => this.findColor(dataset, d.data.category));
+      .style('fill', d => this.findCategoryColor(categoryList, d.data.category));
     treemapTiles
       .append('text')
       .text(d => d.data.name)
       .style('font-size', '11px')
       .attr('transform', 'translate(5, 15)');
+
+    this.drawLegend(categoryList);
   }
 
-  drawLegend(dataset) {
+  drawLegend(categoryList) {
     const legendWidth = 500;
     const legendHeight = 400;
     const itemSize = 30;
     d3.selectAll('#legend').remove();
     d3.select('.TreemapDiagramPage').append('svg').attr('id', 'legend').attr('width', legendWidth).attr('height', legendHeight);
-    const categoryColors = this.createCategoryColors(dataset);
-    //    console.log('categoryColors: ', categoryColors);
-    function findPlace(itemIndex) {
+    //const categoryColors = this.createCategoryColors(dataset.children);
+    function findLegendPlace(itemIndex) {
       const x = ((itemIndex % 3) * legendWidth) / 3;
       const y = (((itemIndex - (itemIndex % 3)) / 3) * legendHeight) / 6;
       return [x, y];
@@ -193,19 +182,19 @@ class TreemapDiagramPage extends React.Component {
     const legendItems = d3
       .select('#legend')
       .selectAll('g')
-      .data(categoryColors)
+      .data(categoryList)
       .enter()
       .append('g')
-      .attr('transform', (d, i) => 'translate(' + findPlace(i)[0] + ', ' + findPlace(i)[1] + ')');
+      .attr('transform', (d, i) => 'translate(' + findLegendPlace(i)[0] + ', ' + findLegendPlace(i)[1] + ')');
     legendItems
       .append('rect')
       .attr('class', 'legend-item')
       .attr('width', itemSize)
       .attr('height', itemSize)
-      .attr('fill', d => d[0]);
+      .attr('fill', d => this.findCategoryColor(categoryList, d));
     legendItems
       .append('text')
-      .text(d => d[1])
+      .text(d => d)
       .attr('transform', 'translate(' + Number(itemSize + 5) + ', ' + Number(itemSize / 2 + 5) + ')');
   }
 
