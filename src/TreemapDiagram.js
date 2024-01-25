@@ -56,18 +56,12 @@ class TreemapDiagramPage extends React.Component {
   drawNavBar() {
     return (
       <div id="nav-bar">
-        Chose dataset:
-        <ul>
-          <li>
-            <button onClick={() => this.handleClick('VideoGame')}>Video Game Data Set</button>
-          </li>
-          <li>
-            <button onClick={() => this.handleClick('Movies')}>Movies Data Set</button>
-          </li>
-          <li>
-            <button onClick={() => this.handleClick('Kickstarter')}>Kickstarter Data Set</button>
-          </li>
-        </ul>
+        <span>Choose dataset: </span>
+        <div id="button-wrapper">
+          <button onClick={() => this.handleClick('VideoGame')}>Video Game Data Set</button>
+          <button onClick={() => this.handleClick('Movies')}>Movies Data Set</button>
+          <button onClick={() => this.handleClick('Kickstarter')}>Kickstarter Data Set</button>
+        </div>
       </div>
     );
   }
@@ -102,7 +96,7 @@ class TreemapDiagramPage extends React.Component {
   }
 
   drawTreemap(dataset) {
-    const treemapWidth = 700;
+    const treemapWidth = 1000;
     const treemapHeight = 500;
 
     d3.select('#treemap-div').remove();
@@ -150,7 +144,6 @@ class TreemapDiagramPage extends React.Component {
 
     var tooltip = d3.select('#treemap-div').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
     const handleMouseover = function (event) {
-      console.log('event: ', event, 'event.target: ', event.target.className);
       const value = event.target.getAttribute('data-value');
       const category = event.target.getAttribute('data-category');
       const name = event.target.getAttribute('data-name');
@@ -162,7 +155,6 @@ class TreemapDiagramPage extends React.Component {
       if (event.target.className === 'tile-div') {
         leftPosition += Number(x0);
         topPosition += Number(y0);
-        console.log('position: ', leftPosition, topPosition);
       }
       tooltip
         .style('visibility', 'visible')
@@ -184,14 +176,15 @@ class TreemapDiagramPage extends React.Component {
   }
 
   drawLegend(categoryList) {
-    const legendWidth = 500;
-    const legendHeight = 400;
     const itemSize = 30;
+    const legendWidth = 800;
+    const legendHeight = Math.ceil(categoryList.length / 3) * itemSize * 1.3 + 40;
     d3.selectAll('#legend').remove();
-    d3.select('.TreemapDiagramPage').append('svg').attr('id', 'legend').attr('width', legendWidth).attr('height', legendHeight);
+    const legendSvg = d3.select('.TreemapDiagramPage').append('svg').attr('id', 'legend').attr('width', legendWidth).attr('height', legendHeight);
+    legendSvg.append('text').text('Categories: ').attr('transform', 'translate(5 , 25)').style('font-size', '20px');
     function findLegendPlace(itemIndex) {
       const x = ((itemIndex % 3) * legendWidth) / 3;
-      const y = (((itemIndex - (itemIndex % 3)) / 3) * legendHeight) / 6;
+      const y = 35 + ((itemIndex - (itemIndex % 3)) / 3) * itemSize * 1.3;
       return [x, y];
     }
     const legendItems = d3
