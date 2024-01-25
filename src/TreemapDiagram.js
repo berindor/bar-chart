@@ -107,64 +107,78 @@ class TreemapDiagramPage extends React.Component {
 
     d3.select('#treemap-div').remove();
     d3.select('.TreemapDiagramPage').append('div').attr('id', 'treemap-div');
-    const svgTreemap = d3.select('#treemap-div').append('svg').attr('id', 'treemap').attr('width', treemapWidth).attr('height', treemapHeight);
 
     const root = d3.hierarchy(dataset).sum(d => d.value);
     root.sort((a, b) => b.value - a.value);
     d3.treemap().size([treemapWidth, treemapHeight]).padding(2)(root);
     const categoryList = root.children.map(node => node.data.name);
 
+    const svgTreemap = d3.select('#treemap-div').append('svg').attr('id', 'treemap').attr('width', treemapWidth).attr('height', treemapHeight);
     const treemapTiles = svgTreemap
-      .selectAll('g')
+      .selectAll('rect')
       .data(root.leaves())
       .enter()
-      .append('g')
-      .attr('transform', d => 'translate(' + d.x0 + ', ' + d.y0 + ')')
-      .attr('width', d => d.x1 - d.x0)
-      .attr('height', d => d.y1 - d.y0);
-
-    treemapTiles
       .append('rect')
       .attr('class', 'tile')
+      .attr('x', d => d.x0)
+      .attr('y', d => d.y0)
       .attr('width', d => d.x1 - d.x0)
       .attr('height', d => d.y1 - d.y0)
       .attr('data-name', d => d.data.name)
       .attr('data-category', d => d.data.category)
       .attr('data-value', d => d.data.value)
-      .attr('data-x0', d => d.x0)
-      .attr('data-y0', d => d.y0)
       .style('fill', d => this.findCategoryColor(categoryList, d.data.category));
-    treemapTiles
-      .append('text')
-      .text(d => d.data.name)
+
+    d3.select('#treemap-div').append('div').attr('id', 'tile-div-wrapper');
+    const tileDivs = d3
+      .select('#tile-div-wrapper')
+      .selectAll('div')
+      .data(root.leaves())
+      .enter()
+      .append('div')
+      .attr('class', 'tile-div')
+      .style('left', d => d.x0 + 'px')
+      .style('top', d => d.y0 + 'px')
+      .style('width', d => d.x1 - d.x0 + 'px')
+      .style('height', d => d.y1 - d.y0 + 'px')
       .attr('data-name', d => d.data.name)
       .attr('data-category', d => d.data.category)
       .attr('data-value', d => d.data.value)
-      .style('font-size', '11px')
-      .attr('transform', 'translate(5, 15)');
+      .attr('x0', d => d.x0)
+      .attr('y0', d => d.y0)
+      .html(d => d.data.name);
 
     var tooltip = d3.select('#treemap-div').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
     const handleMouseover = function (event) {
-      console.log('event: ', event);
-      console.log('mouseEvent: ', MouseEvent);
+      console.log('event: ', event, 'event.target: ', event.target.className);
       const value = event.target.getAttribute('data-value');
       const category = event.target.getAttribute('data-category');
       const name = event.target.getAttribute('data-name');
       const htmlText = name + ' <br> Category: ' + category + ' <br> Value: ' + value;
+      const x0 = event.target.getAttribute('x0');
+      const y0 = event.target.getAttribute('y0');
+      var leftPosition = Number(event.offsetX + 5);
+      var topPosition = Number(event.offsetY - 65);
+      if (event.target.className === 'tile-div') {
+        leftPosition += Number(x0);
+        topPosition += Number(y0);
+        console.log('position: ', leftPosition, topPosition);
+      }
       tooltip
         .style('visibility', 'visible')
         .attr('data-value', value)
         .attr('data-category', category)
         .attr('data-name', name)
         .html(htmlText)
-        .style('left', event.offsetX + 5 + 'px')
-        .style('top', event.offsetY - 65 + 'px');
+        .style('left', leftPosition + 'px')
+        .style('top', topPosition + 'px');
     };
     const handleMouseout = function () {
       tooltip.style('visibility', 'hidden');
     };
 
     treemapTiles.on('mousemove', handleMouseover).on('mouseout', handleMouseout);
+    tileDivs.on('mousemove', handleMouseover).on('mouseout', handleMouseout);
 
     this.drawLegend(categoryList);
   }

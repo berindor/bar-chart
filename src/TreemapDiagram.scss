@@ -7,6 +7,15 @@
     position: relative;
   }
 
+  .tile-div {
+    box-sizing: border-box;
+    position: absolute;
+    overflow-wrap: normal;
+    overflow: hidden;
+    font-size: 11px;
+    padding: 2px;
+  }
+
   #tooltip {
     position: absolute;
     padding: 2px 7px;
