@@ -92,7 +92,7 @@ class TreemapDiagramPage extends React.Component {
 
     const root = d3.hierarchy(dataset).sum(d => d.value);
     root.sort((a, b) => b.value - a.value);
-    d3.treemap().size([treemapWidth, treemapHeight]).padding(2)(root);
+    d3.treemap().size([treemapWidth, treemapHeight]).padding(1)(root);
     const categoryList = root.children.map(node => node.data.name);
 
     const svgTreemap = d3.select('#treemap-div').append('svg').attr('id', 'treemap').attr('width', treemapWidth).attr('height', treemapHeight);
