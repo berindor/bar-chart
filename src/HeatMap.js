@@ -2,6 +2,9 @@ import './HeatMap.scss';
 import React from 'react';
 import * as d3 from 'd3';
 
+//const backgroundColor = 'hsl(40, 38%, 73%)';
+const backgroundColor = 'hsl(40, 100%, 84%)';
+
 class HeatMap extends React.Component {
   constructor(props) {
     super(props);
@@ -10,7 +13,7 @@ class HeatMap extends React.Component {
       monthlyVariance: [],
       minVariance: undefined,
       maxVariance: undefined,
-      numberOfColors: 6
+      numberOfColors: 7
     };
     this.drawPage = this.drawPage.bind(this);
   }
@@ -40,7 +43,7 @@ class HeatMap extends React.Component {
     );
   }
 
-  setColorBorders(numberOfColors) {
+  getColorBorders(numberOfColors) {
     let arr = [];
     for (let i = 0; i <= numberOfColors; i++) {
       arr.push(this.state.baseTemperature + this.state.minVariance + ((this.state.maxVariance - this.state.minVariance) * i) / numberOfColors);
@@ -48,11 +51,11 @@ class HeatMap extends React.Component {
     return arr;
   }
 
-  setColor(temperature, numberOfColors) {
-    const colorBorders = this.setColorBorders(numberOfColors);
+  getColor(temperature, numberOfColors) {
+    const colorBorders = this.getColorBorders(numberOfColors);
     const upperBorder = colorBorders.find(element => element > temperature);
-    const colorCode = 9 - colorBorders.indexOf(upperBorder);
-    const color = '#' + colorCode + colorCode + colorCode;
+    const colorCode = colorBorders.indexOf(upperBorder) / numberOfColors;
+    const color = colorCode > 0.5 ? `hsl(0, 50%, ${60 + 90 * (1 - colorCode)}%)` : `hsl(240, 70%, ${50 + colorCode * 90}%)`;
     return color;
   }
 
@@ -91,7 +94,7 @@ class HeatMap extends React.Component {
     d3.select('#chart-div').remove();
     const chartDiv = d3.selectAll('#heat-map').append('div').attr('id', 'chart-div');
     d3.select('#chart').remove();
-    const svg = chartDiv.append('svg').attr('id', 'chart').attr('width', width).attr('height', height).style('background-color', 'green');
+    const svg = chartDiv.append('svg').attr('id', 'chart').attr('width', width).attr('height', height).style('background-color', backgroundColor);
 
     svg
       .append('g')
@@ -145,7 +148,8 @@ class HeatMap extends React.Component {
       .attr('height', (height - 2 * padding) / 12)
       .attr('x', d => xScale(d.year))
       .attr('y', d => yScale(d.month - 1.5))
-      .attr('fill', d => this.setColor(d.variance + this.state.baseTemperature, this.state.numberOfColors))
+      .attr('fill', d => this.getColor(d.variance + this.state.baseTemperature, this.state.numberOfColors))
+      .attr('stroke', d => this.getColor(d.variance + this.state.baseTemperature, this.state.numberOfColors))
       .on('mouseover', handleMouseover)
       .on('mouseout', handleMouseout);
   }
@@ -163,13 +167,13 @@ class HeatMap extends React.Component {
       .attr('id', 'legend')
       .attr('width', legendWidth)
       .attr('height', legendHeight)
-      .style('background-color', 'green');
+      .style('background-color', backgroundColor);
 
     const legendScale = d3
       .scaleLinear()
       .domain([this.state.minVariance + this.state.baseTemperature, this.state.maxVariance + this.state.baseTemperature])
       .range([legendPadding, legendWidth - legendPadding]);
-    const legendAxis = d3.axisBottom(legendScale).tickValues(this.setColorBorders(numberOfColors)).tickFormat(d3.format('.2f'));
+    const legendAxis = d3.axisBottom(legendScale).tickValues(this.getColorBorders(numberOfColors)).tickFormat(d3.format('.2f'));
 
     legend
       .append('g')
@@ -177,7 +181,7 @@ class HeatMap extends React.Component {
       .attr('transform', 'translate( 0, ' + (legendHeight - legendPadding) + ')')
       .call(legendAxis);
 
-    const legendData = this.setColorBorders(numberOfColors);
+    const legendData = this.getColorBorders(numberOfColors);
     legendData.pop();
 
     legend
@@ -189,7 +193,8 @@ class HeatMap extends React.Component {
       .attr('width', (legendWidth - 2 * legendPadding) / numberOfColors)
       .attr('x', d => legendScale(d))
       .attr('y', legendHeight * 0.5 - legendPadding)
-      .attr('fill', d => this.setColor(d, numberOfColors));
+      .attr('fill', d => this.getColor(d, numberOfColors))
+      .attr('stroke', d => this.getColor(d, numberOfColors));
   }
 
   render() {
