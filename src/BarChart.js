@@ -33,10 +33,12 @@ class BarChart extends React.Component {
       .domain([0, maxGDP])
       .range([height - padding, padding]);
     const yAxis = d3.axisLeft(yScale).ticks(15);
-    d3.select('svg').remove();
-    d3.select('.tooltip').remove();
-    const svg = d3.selectAll('#bar-chart').append('svg').attr('width', width).attr('height', height).style('background-color', 'green');
-    var tooltip = d3.selectAll('#bar-chart').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
+
+    d3.select('#chart-wrapper').remove();
+    d3.select('#bar-chart').append('div').attr('id', 'chart-wrapper').style('width', width).style('height', height);
+    const svg = d3.selectAll('#chart-wrapper').append('svg').attr('width', width).attr('height', height).style('background-color', 'green');
+    var tooltip = d3.selectAll('#chart-wrapper').append('div').attr('id', 'tooltip').style('visibility', 'hidden');
+
     const handleMouseover = function (event) {
       const date = event.target.getAttribute('data-date');
       const gdp = event.target.getAttribute('data-gdp');
@@ -85,7 +87,7 @@ class BarChart extends React.Component {
 
 function BarChartPage() {
   return (
-    <div className="ScatterPlotPage">
+    <div className="BarChartPage">
       <h1 id="title">United States GDP</h1>
       <BarChart />
     </div>
